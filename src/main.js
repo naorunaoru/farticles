@@ -31,7 +31,7 @@ function initializeGUI(particleSystem) {
       particleSystem.setConfig({ mass: value });
     });
   physicsFolder
-    .add(particleSystem.config, "cursorGravity", 0, 1, 0.05)
+    .add(particleSystem.config, "cursorGravity", 0, 5, 0.1)
     .onChange((value) => {
       particleSystem.setConfig({ cursorGravity: value });
     });
@@ -54,9 +54,9 @@ function initializeGUI(particleSystem) {
   // Annihilation
   const annihilationFolder = gui.addFolder("Annihilation");
   annihilationFolder
-    .add(particleSystem.config, "annihilationRadius", 1, 20, 1)
+    .add(particleSystem.config, "baseAnnihilationRadius", 1, 20, 1)
     .onChange((value) => {
-      particleSystem.setConfig({ annihilationRadius: value });
+      particleSystem.setConfig({ baseAnnihilationRadius: value });
     });
   annihilationFolder
     .add(particleSystem.config, "annihilationSpeed", 0, 0.2, 0.01)

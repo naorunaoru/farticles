@@ -1,4 +1,9 @@
-import { getRandomInt, getRandomElement } from "./utils";
+import {
+  getRandomInt,
+  getRandomElement,
+  getRandomLog,
+  getRandomBellCurve,
+} from "./utils";
 import chroma from "chroma-js";
 
 export class Particle {
@@ -16,7 +21,11 @@ export class Particle {
       getRandomElement(this.system.config.baseColors)
     ).rgb();
 
-    this.size = this.system.config.baseSize + getRandomInt(0, 20) / 100;
+    this.size =
+      this.system.config.baseSize +
+      getRandomLog(1, 100) / this.system.config.baseSize / 100;
+    this.maxOpacity = Math.min(1, this.system.config.baseSize / this.size);
+
     this.x = this.initialX;
     this.y = this.initialY;
 
@@ -26,12 +35,17 @@ export class Particle {
     this.state = "fadeIn";
     this.opacity = 0;
     this.life = 0;
-    this.maxLife = this.system.config.baseLife + getRandomInt(-1000, 1000);
+    this.maxLife = getRandomBellCurve(this.system.config.baseLife, 10);
 
     const angle = Math.random() * Math.PI * 2;
 
     this.velocityX = Math.cos(angle) * this.system.config.driftSpeed;
     this.velocityY = Math.sin(angle) * this.system.config.driftSpeed;
+
+    this.annihilationRadius = getRandomBellCurve(
+      this.system.config.baseAnnihilationRadius,
+      1
+    );
   }
 
   applyForce(forceX, forceY) {
@@ -46,8 +60,8 @@ export class Particle {
     switch (this.state) {
       case "fadeIn":
         this.opacity += deltaTime * 0.002;
-        if (this.opacity >= 1) {
-          this.opacity = 1;
+        if (this.opacity >= this.maxOpacity) {
+          this.opacity = this.maxOpacity;
           this.state = "idle";
         }
         break;
@@ -95,7 +109,7 @@ export class Particle {
 
       if (distance < this.system.config.attractionRadius) {
         if (
-          distance < this.system.config.annihilationRadius &&
+          distance < this.annihilationRadius &&
           this.state !== "annihilation"
         ) {
           this.state = "annihilation";

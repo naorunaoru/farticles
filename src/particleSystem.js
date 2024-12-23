@@ -6,18 +6,18 @@ const DEFAULT_CONFIG = {
   baseSize: 0.7,
   baseLife: 1000,
   mass: 1,
-  cursorGravity: 0.2,
+  cursorGravity: 1,
   attractionRadius: 100,
   upwardForce: 0.005,
   friction: 0.99,
-  annihilationRadius: 10 + getRandomInt(-5, 5),
+  baseAnnihilationRadius: 10,
   annihilationSpeed: 0.05,
   driftSpeed: 0.1,
   baseColors: ["#d4e4ff", "#bddaff"],
 };
 
 export class ParticleSystem {
-  constructor({ canvas, svg, config = DEFAULT_CONFIG }) {
+  constructor({ canvas, svg, config = {} }) {
     this.canvas = canvas;
     this.svg = svg;
 
@@ -28,7 +28,10 @@ export class ParticleSystem {
     this.scaleX = this.bbox.width / viewBoxValues.width;
     this.scaleY = this.bbox.height / viewBoxValues.height;
 
-    this.config = config;
+    this.config = {
+      ...DEFAULT_CONFIG,
+      ...config,
+    };
 
     this.ctx = null;
     this.mouseX = 0;
@@ -37,6 +40,18 @@ export class ParticleSystem {
     this.lastTime = performance.now();
     this.isMouseOver = false;
   }
+
+  setupCanvasDPI = () => {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = this.canvas.getBoundingClientRect();
+
+    this.canvas.width = rect.width * dpr;
+    this.canvas.height = rect.height * dpr;
+    this.canvas.style.width = `${rect.width}px`;
+    this.canvas.style.height = `${rect.height}px`;
+
+    this.ctx.scale(dpr, dpr);
+  };
 
   init = () => {
     if (!this.canvas || !this.svg) {
@@ -54,8 +69,9 @@ export class ParticleSystem {
 
     this.ctx = this.canvas.getContext("2d");
 
+    this.setupCanvasDPI();
+
     this.canvas.addEventListener("mousemove", this.handleMouseMove);
-    this.canvas.addEventListener("mouseenter", this.handleMouseEnter);
     this.canvas.addEventListener("mouseleave", this.handleMouseLeave);
 
     this.animate();
@@ -70,13 +86,10 @@ export class ParticleSystem {
   };
 
   handleMouseMove = (e) => {
+    this.isMouseOver = true;
     const rect = this.canvas.getBoundingClientRect();
     this.mouseX = e.clientX - rect.left;
     this.mouseY = e.clientY - rect.top;
-  };
-
-  handleMouseEnter = () => {
-    this.isMouseOver = true;
   };
 
   handleMouseLeave = () => {
