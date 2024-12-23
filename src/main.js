@@ -1,4 +1,4 @@
-import { ParticleSystem } from "./particleSystem";
+import { ParticleSystem } from "../dist/particleSystem";
 
 import GUI from "lil-gui";
 
@@ -100,12 +100,10 @@ function initializeGUI(particleSystem) {
   return gui;
 }
 
-const svgElement = document.getElementById("constraint");
+const svg = document.getElementById("constraint");
 const canvas = document.getElementById("particleCanvas");
 
-svgElement.addEventListener("load", () => {
-  const svg = svgElement.contentDocument.querySelectorAll("svg")[0];
-
+svg.addEventListener("load", () => {
   const system = new ParticleSystem({ canvas, svg });
 
   system.init();

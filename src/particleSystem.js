@@ -19,7 +19,8 @@ const DEFAULT_CONFIG = {
 export class ParticleSystem {
   constructor({ canvas, svg, config = {} }) {
     this.canvas = canvas;
-    this.svg = svg;
+    this.svgObject = svg;
+    this.svg = this.svgObject.contentDocument.querySelectorAll("svg")[0];
 
     this.bbox = this.svg.getBoundingClientRect();
 
@@ -119,8 +120,8 @@ export class ParticleSystem {
     } while (!this.isPointInShape(point));
 
     return {
-      x: point.x * this.scaleX,
-      y: point.y * this.scaleY,
+      x: point.x * this.scaleX + this.svgObject.offsetLeft,
+      y: point.y * this.scaleY + this.svgObject.offsetTop,
     };
   };
 
