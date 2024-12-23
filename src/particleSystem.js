@@ -4,6 +4,7 @@ import { getRandomInt } from "./utils";
 const DEFAULT_CONFIG = {
   maxParticles: 10000,
   baseSize: 0.7,
+  sizeDeviation: 0.8,
   baseLife: 1000,
   lifeDeviation: 100,
   mass: 1,

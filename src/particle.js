@@ -1,9 +1,4 @@
-import {
-  getRandomInt,
-  getRandomElement,
-  getRandomLog,
-  getRandomBellCurve,
-} from "./utils";
+import { getRandomElement, getRandomBellCurve } from "./utils";
 import chroma from "chroma-js";
 
 export class Particle {
@@ -21,9 +16,13 @@ export class Particle {
       getRandomElement(this.system.config.baseColors)
     ).rgb();
 
-    this.size =
-      this.system.config.baseSize +
-      getRandomLog(1, 100) / this.system.config.baseSize / 100;
+    this.size = Math.max(
+      getRandomBellCurve(
+        this.system.config.baseSize,
+        this.system.config.sizeDeviation
+      ),
+      0.1
+    );
     this.maxOpacity = Math.min(1, this.system.config.baseSize / this.size);
 
     this.x = this.initialX;

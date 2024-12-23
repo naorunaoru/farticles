@@ -18,6 +18,11 @@ function initializeGUI(particleSystem) {
       particleSystem.setConfig({ baseSize: value });
     });
   particleFolder
+    .add(particleSystem.config, "sizeDeviation", 0.1, 2, 0.1)
+    .onChange((value) => {
+      particleSystem.setConfig({ sizeDeviation: value });
+    });
+  particleFolder
     .add(particleSystem.config, "baseLife", 100, 5000, 100)
     .onChange((value) => {
       particleSystem.setConfig({ baseLife: value });
@@ -25,7 +30,7 @@ function initializeGUI(particleSystem) {
   particleFolder
     .add(particleSystem.config, "lifeDeviation", 0, 1000, 50)
     .onChange((value) => {
-      particleSystem.setConfig({ baseLife: value });
+      particleSystem.setConfig({ lifeDeviation: value });
     });
 
   // Physics

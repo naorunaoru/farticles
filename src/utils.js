@@ -13,15 +13,6 @@ export const getRandomBellCurve = (mean, stdDev) => {
   return z0 * stdDev + mean;
 };
 
-export const getRandomLog = (min, max) => {
-  const minLog = Math.log(min);
-  const maxLog = Math.log(max);
-
-  const randomLog = minLog + Math.random() * (maxLog - minLog);
-
-  return Math.round(Math.exp(randomLog));
-};
-
 export const getRandomElement = (array) => {
   if (array.length === 0) {
     throw new Error("Cannot pick a random element from an empty array");
