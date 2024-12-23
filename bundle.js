@@ -1,3 +1,5 @@
+
+(function(l, r) { if (!l || l.getElementById('livereloadscript')) return; r = l.createElement('script'); r.async = 1; r.src = '//' + (self.location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1'; r.id = 'livereloadscript'; l.getElementsByTagName('head')[0].appendChild(r) })(self.document);
 (function () {
     'use strict';
 
@@ -3532,7 +3534,10 @@
         this.state = "fadeIn";
         this.opacity = 0;
         this.life = 0;
-        this.maxLife = getRandomBellCurve(this.system.config.baseLife, 10);
+        this.maxLife = getRandomBellCurve(
+          this.system.config.baseLife,
+          this.system.config.lifeDeviation
+        );
 
         const angle = Math.random() * Math.PI * 2;
 
@@ -3642,6 +3647,7 @@
       maxParticles: 10000,
       baseSize: 0.7,
       baseLife: 1000,
+      lifeDeviation: 100,
       mass: 1,
       cursorGravity: 1,
       attractionRadius: 100,
@@ -3770,7 +3776,10 @@
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         if (this.particles.length < this.config.maxParticles) {
-          const particlesToAdd = Math.floor(Math.random() * 50);
+          const particlesToAdd = Math.min(
+            Math.floor(Math.random() * 50),
+            this.config.maxParticles - this.particles.length
+          );
           for (let i = 1; i <= particlesToAdd; i++) {
             let spawnPoint;
 
@@ -6210,6 +6219,11 @@
         .onChange((value) => {
           particleSystem.setConfig({ baseLife: value });
         });
+      particleFolder
+        .add(particleSystem.config, "lifeDeviation", 0, 1000, 50)
+        .onChange((value) => {
+          particleSystem.setConfig({ baseLife: value });
+        });
 
       // Physics
       const physicsFolder = gui.addFolder("Physics");
@@ -6300,3 +6314,4 @@
     });
 
 })();
+//# sourceMappingURL=bundle.js.map
