@@ -5,6 +5,7 @@ const DEFAULT_CONFIG = {
   maxParticles: 10000,
   baseSize: 0.7,
   baseLife: 1000,
+  lifeDeviation: 100,
   mass: 1,
   cursorGravity: 1,
   attractionRadius: 100,
@@ -133,7 +134,10 @@ export class ParticleSystem {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     if (this.particles.length < this.config.maxParticles) {
-      const particlesToAdd = Math.floor(Math.random() * 50);
+      const particlesToAdd = Math.min(
+        Math.floor(Math.random() * 50),
+        this.config.maxParticles - this.particles.length
+      );
       for (let i = 1; i <= particlesToAdd; i++) {
         let spawnPoint;
 

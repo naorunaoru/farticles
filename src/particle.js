@@ -35,7 +35,10 @@ export class Particle {
     this.state = "fadeIn";
     this.opacity = 0;
     this.life = 0;
-    this.maxLife = getRandomBellCurve(this.system.config.baseLife, 10);
+    this.maxLife = getRandomBellCurve(
+      this.system.config.baseLife,
+      this.system.config.lifeDeviation
+    );
 
     const angle = Math.random() * Math.PI * 2;
 

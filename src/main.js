@@ -22,6 +22,11 @@ function initializeGUI(particleSystem) {
     .onChange((value) => {
       particleSystem.setConfig({ baseLife: value });
     });
+  particleFolder
+    .add(particleSystem.config, "lifeDeviation", 0, 1000, 50)
+    .onChange((value) => {
+      particleSystem.setConfig({ baseLife: value });
+    });
 
   // Physics
   const physicsFolder = gui.addFolder("Physics");
