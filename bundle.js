@@ -7,6 +7,24 @@
     return Math.floor(Math.random() * (max - min + 1)) + min;
   };
 
+  const getRandomBellCurve = (mean, stdDev) => {
+    const u1 = Math.random();
+    const u2 = Math.random();
+
+    const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+
+    return z0 * stdDev + mean;
+  };
+
+  const getRandomLog = (min, max) => {
+    const minLog = Math.log(min);
+    const maxLog = Math.log(max);
+
+    const randomLog = minLog + Math.random() * (maxLog - minLog);
+
+    return Math.round(Math.exp(randomLog));
+  };
+
   const getRandomElement = (array) => {
     if (array.length === 0) {
       throw new Error("Cannot pick a random element from an empty array");
@@ -3500,7 +3518,11 @@
         getRandomElement(this.system.config.baseColors)
       ).rgb();
 
-      this.size = this.system.config.baseSize + getRandomInt(0, 20) / 100;
+      this.size =
+        this.system.config.baseSize +
+        getRandomLog(1, 100) / this.system.config.baseSize / 100;
+      this.maxOpacity = Math.min(1, this.system.config.baseSize / this.size);
+
       this.x = this.initialX;
       this.y = this.initialY;
 
@@ -3510,12 +3532,17 @@
       this.state = "fadeIn";
       this.opacity = 0;
       this.life = 0;
-      this.maxLife = this.system.config.baseLife + getRandomInt(-1000, 1000);
+      this.maxLife = getRandomBellCurve(this.system.config.baseLife, 10);
 
       const angle = Math.random() * Math.PI * 2;
 
       this.velocityX = Math.cos(angle) * this.system.config.driftSpeed;
       this.velocityY = Math.sin(angle) * this.system.config.driftSpeed;
+
+      this.annihilationRadius = getRandomBellCurve(
+        this.system.config.baseAnnihilationRadius,
+        1
+      );
     }
 
     applyForce(forceX, forceY) {
@@ -3530,8 +3557,8 @@
       switch (this.state) {
         case "fadeIn":
           this.opacity += deltaTime * 0.002;
-          if (this.opacity >= 1) {
-            this.opacity = 1;
+          if (this.opacity >= this.maxOpacity) {
+            this.opacity = this.maxOpacity;
             this.state = "idle";
           }
           break;
@@ -3579,7 +3606,7 @@
 
         if (distance < this.system.config.attractionRadius) {
           if (
-            distance < this.system.config.annihilationRadius &&
+            distance < this.annihilationRadius &&
             this.state !== "annihilation"
           ) {
             this.state = "annihilation";
@@ -3616,18 +3643,18 @@
     baseSize: 0.7,
     baseLife: 1000,
     mass: 1,
-    cursorGravity: 0.2,
+    cursorGravity: 1,
     attractionRadius: 100,
     upwardForce: 0.005,
     friction: 0.99,
-    annihilationRadius: 10 + getRandomInt(-5, 5),
+    baseAnnihilationRadius: 10,
     annihilationSpeed: 0.05,
     driftSpeed: 0.1,
     baseColors: ["#d4e4ff", "#bddaff"],
   };
 
   class ParticleSystem {
-    constructor({ canvas, svg, config = DEFAULT_CONFIG }) {
+    constructor({ canvas, svg, config = {} }) {
       this.canvas = canvas;
       this.svg = svg;
 
@@ -3638,7 +3665,10 @@
       this.scaleX = this.bbox.width / viewBoxValues.width;
       this.scaleY = this.bbox.height / viewBoxValues.height;
 
-      this.config = config;
+      this.config = {
+        ...DEFAULT_CONFIG,
+        ...config,
+      };
 
       this.ctx = null;
       this.mouseX = 0;
@@ -3647,6 +3677,18 @@
       this.lastTime = performance.now();
       this.isMouseOver = false;
     }
+
+    setupCanvasDPI = () => {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = this.canvas.getBoundingClientRect();
+
+      this.canvas.width = rect.width * dpr;
+      this.canvas.height = rect.height * dpr;
+      this.canvas.style.width = `${rect.width}px`;
+      this.canvas.style.height = `${rect.height}px`;
+
+      this.ctx.scale(dpr, dpr);
+    };
 
     init = () => {
       if (!this.canvas || !this.svg) {
@@ -3664,8 +3706,9 @@
 
       this.ctx = this.canvas.getContext("2d");
 
+      this.setupCanvasDPI();
+
       this.canvas.addEventListener("mousemove", this.handleMouseMove);
-      this.canvas.addEventListener("mouseenter", this.handleMouseEnter);
       this.canvas.addEventListener("mouseleave", this.handleMouseLeave);
 
       this.animate();
@@ -3680,13 +3723,10 @@
     };
 
     handleMouseMove = (e) => {
+      this.isMouseOver = true;
       const rect = this.canvas.getBoundingClientRect();
       this.mouseX = e.clientX - rect.left;
       this.mouseY = e.clientY - rect.top;
-    };
-
-    handleMouseEnter = () => {
-      this.isMouseOver = true;
     };
 
     handleMouseLeave = () => {
@@ -6178,7 +6218,7 @@
         particleSystem.setConfig({ mass: value });
       });
     physicsFolder
-      .add(particleSystem.config, "cursorGravity", 0, 1, 0.05)
+      .add(particleSystem.config, "cursorGravity", 0, 5, 0.1)
       .onChange((value) => {
         particleSystem.setConfig({ cursorGravity: value });
       });
@@ -6201,9 +6241,9 @@
     // Annihilation
     const annihilationFolder = gui.addFolder("Annihilation");
     annihilationFolder
-      .add(particleSystem.config, "annihilationRadius", 1, 20, 1)
+      .add(particleSystem.config, "baseAnnihilationRadius", 1, 20, 1)
       .onChange((value) => {
-        particleSystem.setConfig({ annihilationRadius: value });
+        particleSystem.setConfig({ baseAnnihilationRadius: value });
       });
     annihilationFolder
       .add(particleSystem.config, "annihilationSpeed", 0, 0.2, 0.01)
