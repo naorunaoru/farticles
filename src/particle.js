@@ -1,0 +1,128 @@
+import { getRandomInt, getRandomElement } from "./utils";
+import chroma from "chroma-js";
+
+export class Particle {
+  constructor(system, { x, y }) {
+    this.system = system;
+
+    this.initialX = x;
+    this.initialY = y;
+
+    this.reset();
+  }
+
+  reset() {
+    this.baseColor = chroma(
+      getRandomElement(this.system.config.baseColors)
+    ).rgb();
+
+    this.size = this.system.config.baseSize + getRandomInt(0, 20) / 100;
+    this.x = this.initialX;
+    this.y = this.initialY;
+
+    this.velocityX = 0;
+    this.velocityY = 0;
+
+    this.state = "fadeIn";
+    this.opacity = 0;
+    this.life = 0;
+    this.maxLife = this.system.config.baseLife + getRandomInt(-1000, 1000);
+
+    const angle = Math.random() * Math.PI * 2;
+
+    this.velocityX = Math.cos(angle) * this.system.config.driftSpeed;
+    this.velocityY = Math.sin(angle) * this.system.config.driftSpeed;
+  }
+
+  applyForce(forceX, forceY) {
+    this.velocityX += forceX * this.system.config.mass;
+    this.velocityY += forceY * this.system.config.mass;
+  }
+
+  update(deltaTime) {
+    this.life += deltaTime;
+    const dt = deltaTime / 20; // Normalize time step
+
+    switch (this.state) {
+      case "fadeIn":
+        this.opacity += deltaTime * 0.002;
+        if (this.opacity >= 1) {
+          this.opacity = 1;
+          this.state = "idle";
+        }
+        break;
+
+      case "idle":
+        if (this.life > this.maxLife) {
+          this.state = "fadeOut";
+        }
+        this.updatePhysics(dt);
+        break;
+
+      case "fadeOut":
+        this.opacity -= deltaTime * 0.001;
+        this.updatePhysics(dt);
+
+        if (this.opacity <= 0 || this.y <= 5) {
+          this.reset();
+        }
+        break;
+
+      case "annihilation":
+        this.opacity -= this.system.config.annihilationSpeed;
+
+        this.velocityX *= 0.9;
+        this.velocityY *= 0.9;
+
+        this.x += this.velocityX * dt;
+        this.y += this.velocityY * dt;
+
+        if (this.opacity <= 0) {
+          this.reset();
+        }
+        break;
+    }
+  }
+
+  updatePhysics(dt) {
+    this.applyForce(0, -this.system.config.upwardForce);
+
+    if (this.system.isMouseOver) {
+      const dx = this.system.mouseX - this.x;
+      const dy = this.system.mouseY - this.y;
+      const distanceSquared = dx * dx + dy * dy;
+      const distance = Math.sqrt(distanceSquared);
+
+      if (distance < this.system.config.attractionRadius) {
+        if (
+          distance < this.system.config.annihilationRadius &&
+          this.state !== "annihilation"
+        ) {
+          this.state = "annihilation";
+
+          return;
+        }
+
+        const force =
+          this.system.config.cursorGravity / Math.max(distanceSquared, 100);
+        const forceX = dx * force;
+        const forceY = dy * force;
+
+        this.applyForce(forceX, forceY);
+      }
+    }
+
+    this.velocityX *= this.system.config.friction;
+    this.velocityY *= this.system.config.friction;
+
+    this.x += this.velocityX * dt;
+    this.y += this.velocityY * dt;
+  }
+
+  draw() {
+    this.system.ctx.beginPath();
+    this.system.ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    this.system.ctx.fillStyle = `rgba(${this.baseColor[0]}, ${this.baseColor[1]}, ${this.baseColor[2]}, ${this.opacity})`;
+    this.system.ctx.fill();
+  }
+}
