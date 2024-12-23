@@ -13,11 +13,12 @@
   "description": "",
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^16.0.0",
+    "@rollup/plugin-terser": "^0.4.4",
     "gh-pages": "^6.2.0",
+    "lil-gui": "^0.20.0",
     "rollup": "^4.29.1",
     "rollup-plugin-livereload": "^2.0.5",
-    "rollup-plugin-serve": "^1.1.1",
-    "lil-gui": "^0.20.0"
+    "rollup-plugin-serve": "^1.1.1"
   },
   "dependencies": {
     "chroma-js": "^3.1.2"

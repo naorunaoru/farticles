@@ -1,4 +1,5 @@
 import { nodeResolve } from "@rollup/plugin-node-resolve";
+import terser from "@rollup/plugin-terser";
 import serve from "rollup-plugin-serve";
 import livereload from "rollup-plugin-livereload";
 
@@ -13,6 +14,7 @@ export default [
       format: "es",
       sourcemap: !production,
     },
+    plugins: [production && terser()].filter(Boolean),
   },
   {
     input: "src/main.js",
