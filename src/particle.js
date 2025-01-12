@@ -1,5 +1,14 @@
 import { getRandomElement, getRandomBellCurve } from "./utils";
-import chroma from "chroma-js";
+
+function hexToRgb(hex) {
+  hex = hex.replace("#", "");
+
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+
+  return [r, g, b];
+}
 
 export class Particle {
   constructor(system, { x, y }) {
@@ -12,9 +21,7 @@ export class Particle {
   }
 
   reset() {
-    this.baseColor = chroma(
-      getRandomElement(this.system.config.baseColors)
-    ).rgb();
+    this.baseColor = hexToRgb(getRandomElement(this.system.config.baseColors));
 
     this.size = Math.max(
       getRandomBellCurve(
