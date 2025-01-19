@@ -250,7 +250,8 @@ var farticles = (function (exports) {
   }
 
   class ParticleSystem {
-    constructor({ canvas, config = {} }) {
+    constructor(url, { canvas, config = {} }) {
+      this.url = url;
       this.canvas = canvas;
 
       this.config = {
@@ -290,7 +291,7 @@ var farticles = (function (exports) {
       );
       try {
         await detector.loadAndDrawSVG(
-          "/logo.svg",
+          this.url,
           this.config.padding,
           this.config.padding,
           this.canvas.offsetWidth - this.config.padding * 2,

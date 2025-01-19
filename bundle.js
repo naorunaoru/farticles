@@ -2501,15 +2501,12 @@
 	  return gui;
 	}
 
-	const svg = document.getElementById("constraint");
 	const canvas = document.getElementById("particleCanvas");
 
-	svg.addEventListener("load", () => {
-	  const system = new farticles.ParticleSystem({ canvas, svg });
+	const system = new farticles.ParticleSystem("logo.svg", { canvas });
 
-	  system.init();
+	system.init();
 
-	  initializeGUI(system);
-	});
+	initializeGUI(system);
 
 })();
