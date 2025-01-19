@@ -1,12 +1,12 @@
 import { Particle } from "./particle";
-import { getRandomInt } from "./utils";
+import { PixelDetector } from "./pixelDetector";
 
 const DEFAULT_CONFIG = {
   maxParticles: 10000,
   baseSize: 0.7,
   sizeDeviation: 0.8,
   baseLife: 1000,
-  lifeDeviation: 100,
+  lifeDeviation: 800,
   mass: 1,
   cursorGravity: 1,
   attractionRadius: 100,
@@ -16,20 +16,28 @@ const DEFAULT_CONFIG = {
   annihilationSpeed: 0.05,
   driftSpeed: 0.1,
   baseColors: ["#d4e4ff", "#bddaff"],
+  padding: 20,
 };
 
+function sampleN(array, n) {
+  if (n > array.length) {
+    throw new Error("Sample size cannot be larger than array length");
+  }
+
+  const copy = [...array];
+
+  for (let i = 0; i < n; i++) {
+    const j = i + Math.floor(Math.random() * (copy.length - i));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+
+  return copy.slice(0, n);
+}
+
 export class ParticleSystem {
-  constructor({ canvas, svg, config = {} }) {
+  constructor(url, { canvas, config = {} }) {
+    this.url = url;
     this.canvas = canvas;
-    this.svgObject = svg;
-    this.svg = this.svgObject.contentDocument.querySelectorAll("svg")[0];
-
-    this.bbox = this.svg.getBoundingClientRect();
-
-    const viewBoxValues = this.svg.viewBox.baseVal;
-
-    this.scaleX = this.bbox.width / viewBoxValues.width;
-    this.scaleY = this.bbox.height / viewBoxValues.height;
 
     this.config = {
       ...DEFAULT_CONFIG,
@@ -56,19 +64,31 @@ export class ParticleSystem {
     this.ctx.scale(dpr, dpr);
   };
 
-  init = () => {
-    if (!this.canvas || !this.svg) {
+  init = async () => {
+    if (!this.canvas) {
       console.error("Required elements not found");
       return;
     }
 
-    this.spawnAreas = Array.from(
-      this.svg.querySelectorAll("circle, rect, path, polygon, ellipse")
+    const detector = new PixelDetector(
+      this.canvas.offsetWidth,
+      this.canvas.offsetHeight
     );
+    try {
+      await detector.loadAndDrawSVG(
+        this.url,
+        this.config.padding,
+        this.config.padding,
+        this.canvas.offsetWidth - this.config.padding * 2,
+        this.canvas.offsetHeight - this.config.padding * 2
+      );
 
-    if (!this.spawnAreas.length) {
-      console.error("No spawn areas detected");
+      this.pointData = detector.getOpaquePixels();
+    } catch (error) {
+      console.error("you are penis", error);
     }
+
+    this.setPoints();
 
     this.ctx = this.canvas.getContext("2d");
 
@@ -80,12 +100,16 @@ export class ParticleSystem {
     this.animate();
   };
 
+  setPoints = () => {
+    this.particles = sampleN(this.pointData, this.config.maxParticles).map(
+      (pixel) => new Particle(this, pixel)
+    );
+  };
+
   setConfig = (config) => {
     this.config = Object.assign(this.config, config);
 
-    if (config.maxParticles < this.particles.length) {
-      this.particles.length = config.maxParticles;
-    }
+    this.setPoints();
   };
 
   handleMouseMove = (e) => {
@@ -99,63 +123,12 @@ export class ParticleSystem {
     this.isMouseOver = false;
   };
 
-  isPointInShape = (point) => {
-    const pointObj = this.svg.createSVGPoint();
-
-    pointObj.x = point.x;
-    pointObj.y = point.y;
-
-    const isPointInFill = this.spawnAreas
-      .map((shape) => shape.isPointInFill(pointObj))
-      .some(Boolean);
-
-    return isPointInFill;
-  };
-
-  getRandomPointInShape = () => {
-    let point;
-    do {
-      point = {
-        x: this.bbox.x + Math.random() * this.bbox.width,
-        y: this.bbox.y + Math.random() * this.bbox.height,
-      };
-    } while (!this.isPointInShape(point));
-
-    return {
-      x: point.x * this.scaleX + this.svgObject.offsetLeft,
-      y: point.y * this.scaleY + this.svgObject.offsetTop,
-    };
-  };
-
   animate = () => {
     const currentTime = performance.now();
     const deltaTime = currentTime - this.lastTime;
     this.lastTime = currentTime;
 
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-    if (this.particles.length < this.config.maxParticles) {
-      const particlesToAdd = Math.min(
-        Math.floor(Math.random() * 50),
-        this.config.maxParticles - this.particles.length
-      );
-      for (let i = 1; i <= particlesToAdd; i++) {
-        let spawnPoint;
-
-        if (this.spawnAreas.length) {
-          spawnPoint = this.getRandomPointInShape();
-        } else {
-          spawnPoint = {
-            x: getRandomInt(0, this.canvas.width),
-            y: getRandomInt(0, this.canvas.height),
-          };
-        }
-
-        this.particles.push(
-          new Particle(this, { x: spawnPoint.x, y: spawnPoint.y })
-        );
-      }
-    }
 
     this.particles.forEach((particle) => {
       particle.update(deltaTime);

@@ -14,7 +14,15 @@ export default [
       format: "es",
       sourcemap: !production,
     },
-    plugins: [production && terser()].filter(Boolean),
+  },
+  {
+    input: "src/particleSystem.js",
+    output: {
+      name: "farticles",
+      file: "public/particleSystem.js",
+      format: "iife",
+      sourcemap: !production,
+    },
   },
   {
     input: "src/main.js",

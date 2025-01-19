@@ -1,9 +1,3 @@
-export const getRandomInt = (min, max) => {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-};
-
 export const getRandomBellCurve = (mean, stdDev) => {
   const u1 = Math.random();
   const u2 = Math.random();
